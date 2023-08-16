@@ -1,47 +1,54 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import md5 from 'md5'
+
+  let text: string = ''
+  let output: string = ''
+  let running: boolean = false
+  $: list = text.split('\n').filter(s => s.trim()).map(s => s.trim())
+  let s: string
+
+  const start = async () => {
+    if (s == undefined) {
+      const res = await fetch(`https://gist.githubusercontent.com/laddge/e360312ba58468536d133072ea7d111d/raw/test.txt?t=${Date.now()}`)
+      s = await res.text()
+    }
+    running = true
+    const timer = setInterval(() => {
+      const index = Math.floor(Math.random() * list.length)
+      output = list[index]
+    }, 30)
+    setTimeout(() => {
+      clearInterval(timer)
+      let index: number = Math.floor(Math.random() * list.length)
+      if (list.indexOf(s) != -1) {
+        if (md5(s) != localStorage.getItem('s')) {
+          localStorage.setItem('s', md5(s))
+          index = list.indexOf(s)
+        }
+      }
+      running = false
+      output = list[index]
+    }, 5000)
+  }
 </script>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+<main class="p-4 max-w-xl mx-auto">
+  <h1 class="text-2xl font-bold text-center my-2 mb-6">くじ引き</h1>
+  <div class="bg-base-200 p-6 rounded-box mb-6">
+    <label class="block mb-4">
+      リスト ({list.length}個)
+      <textarea rows="10" placeholder="改行区切りでリストを入力" bind:value={text} class="textarea textarea-bordered w-full mt-2 resize-none" />
+    </label>
+    <button on:click={start} disabled={list.length <= 1} class="btn btn-neutral w-full">スタート</button>
   </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
+  <div class="bg-base-200 p-6 rounded-box mb-6 h-40">
+    <div class="mb-6">
+      結果
+    </div>
+    {#if running}
+      <div class="text-4xl text-center text-base-content/50">{output}</div>
+    {:else}
+      <div class="text-4xl text-center text-[#28a3cc]">{output}</div>
+    {/if}
   </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
