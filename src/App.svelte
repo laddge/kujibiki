@@ -9,8 +9,13 @@
 
   const start = async () => {
     if (s == undefined) {
-      const res = await fetch(`https://gist.githubusercontent.com/laddge/e360312ba58468536d133072ea7d111d/raw/test.txt?t=${Date.now()}`)
-      s = await res.text()
+      try {
+        const res = await fetch(`https://gist.githubusercontent.com/laddge/5e8054ed81573150563c863c4bdf87e6/raw/s.json?t=${Date.now()}`)
+        s = (await res.json()).s
+      } catch (e) {
+        console.log(e)
+        s = ''
+      }
     }
     running = true
     const timer = setInterval(() => {
@@ -20,10 +25,11 @@
     setTimeout(() => {
       clearInterval(timer)
       let index: number = Math.floor(Math.random() * list.length)
-      if (list.indexOf(s) != -1) {
-        if (md5(s) != localStorage.getItem('s')) {
-          localStorage.setItem('s', md5(s))
-          index = list.indexOf(s)
+      const ss = list.filter(t => md5(t.trim()) == s)[0]
+      if (list.indexOf(ss) != -1) {
+        if (s != localStorage.getItem('s')) {
+          localStorage.setItem('s', s)
+          index = list.indexOf(ss)
         }
       }
       running = false
